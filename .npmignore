@@ -1,0 +1,4 @@
+scripts/
+network.md
+*.log
+.DS_Store
