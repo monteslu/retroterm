@@ -415,8 +415,9 @@ export class Launcher {
       args.push('--contrast', contrastValue.toFixed(2));
     }
 
-    const retroemuBin = join(__dirname, '..', 'node_modules', '.bin', 'retroemu');
-    const child = spawn(retroemuBin, args, {
+    // Resolve retroemu CLI path regardless of hoisting
+    const retroemuCliPath = fileURLToPath(import.meta.resolve('retroemu/bin/cli.js'));
+    const child = spawn(process.execPath, [retroemuCliPath, ...args], {
       stdio: 'inherit',
     });
 
