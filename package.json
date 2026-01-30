@@ -1,6 +1,6 @@
 {
   "name": "retroterm",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Terminal-based retro game launcher with ROM browser and box art",
   "type": "module",
   "main": "index.js",
