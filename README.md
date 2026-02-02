@@ -29,17 +29,30 @@ retroterm
 
 On first run, press `S` to configure your ROMs directory.
 
-### Controls
+### Keyboard Controls
 
 | Key | Action |
 |-----|--------|
 | `Enter` | Launch selected game |
-| `j` / `k` or arrows | Navigate list |
-| `A` | Show all ROMs |
+| `↑` / `↓` or `j` / `k` | Navigate list |
+| `←` / `→` | Switch system |
+| `A` | Show all ROMs (current system) |
 | `R` | Show recent games |
 | `S` | Settings |
 | `F5` | Refresh ROM list |
 | `Q` | Quit |
+
+### Gamepad Controls
+
+| Button | Action |
+|--------|--------|
+| D-pad / Left Stick | Navigate |
+| A (south) | Launch game |
+| B (east) | Back to system view |
+| X (west) | Recent games |
+| Y (north) | Settings |
+| LB / RB | Page up/down |
+| Start | Launch game |
 
 ## Configuration
 
@@ -50,9 +63,41 @@ Settings are stored in `~/.config/retroterm/config.json`:
   "romsDir": "/home/user/roms",
   "savesDir": "/home/user/.config/retroterm/saves",
   "recentGames": [],
-  "maxRecent": 10
+  "maxRecent": 10,
+  "symbols": "block",
+  "colors": "256",
+  "fgOnly": true,
+  "dither": false,
+  "contrast": 5
 }
 ```
+
+### Graphics Settings
+
+Press `Y` (gamepad) or `S` (keyboard) to open settings. Graphics are controlled by 3 independent options:
+
+**Symbols** — Character set for rendering:
+- `block` — Full block characters (default)
+- `half` — Vertical half blocks
+- `ascii` — ASCII printable characters
+- `solid` — Space + background color only
+- `stipple` — Shading characters (░▒▓)
+- `quad` — 2x2 quadrant blocks
+- `sextant` — 2x3 sextant blocks (highest resolution)
+- `octant` — 2x4 octant blocks
+- `braille` — Braille dot patterns (great for B&W)
+
+**Colors** — Color depth:
+- `true` — True color (16M colors)
+- `256` — 256 indexed colors (default)
+- `16` — 16 ANSI colors
+- `2` — Black & white
+
+**Checkboxes:**
+- `FG Only` — Foreground color only, black background (default: on)
+- `Dither` — Floyd-Steinberg dithering (default: off)
+
+**Contrast** — Slider from 1-10 (5 = normal)
 
 ## Supported Systems
 
@@ -79,12 +124,15 @@ retroterm can stream games over the network using a custom binary protocol optim
 
 ### Render Modes
 
-| Mode | Quality | Bandwidth | Best For |
-|------|---------|-----------|----------|
-| `half-block-256` | Chunky pixels | Lowest | Retro games (default) |
-| `block-256` | Smooth shading | Medium | When detail matters |
-| `ascii-256` | Textured | Medium | Aesthetic preference |
-| `braille` | Dot matrix | Tiny | Monochrome games |
+Combine symbols + colors for different effects:
+
+| Symbols | Colors | Bandwidth | Best For |
+|---------|--------|-----------|----------|
+| `block` | `256` | Lower | Default, good compatibility |
+| `block` | `true` | Medium | Modern terminals |
+| `braille` | `2` | Lowest | Monochrome games |
+| `sextant` | `true` | Higher | Maximum resolution |
+| `ascii` | `256` | Medium | Retro aesthetic |
 
 ### Custom Binary Protocol
 

@@ -109,7 +109,7 @@ export class Launcher {
       top: 0,
       right: 0,
       width: '50%',
-      bottom: 8,
+      bottom: 9,
       border: { type: 'line' },
       style: { border: { fg: 'green' } },
       tags: true,
@@ -122,7 +122,7 @@ export class Launcher {
       right: 0,
       bottom: 3,
       width: '50%',
-      height: 5,
+      height: 6,
       border: { type: 'line' },
       style: { border: { fg: 'magenta' } },
       tags: true,
@@ -342,11 +342,13 @@ export class Launcher {
   _setupKeys() {
     // Quit
     this.screen.key(['q', 'C-c'], () => {
+      if (this._settingsOpen) return;
       process.exit(0);
     });
 
     // Launch game
     this.romList.key(['enter'], () => {
+      if (this._settingsOpen) return;
       const index = this.romList.selected;
       const rom = this._getSelectedRom(index);
       if (rom) {
@@ -356,28 +358,34 @@ export class Launcher {
 
     // View toggles
     this.screen.key(['a'], () => {
+      if (this._settingsOpen) return;
       this._showCurrentSystem();
     });
 
     // Left/Right arrow keys for system navigation
     this.screen.key(['left'], () => {
+      if (this._settingsOpen) return;
       this._navigatePrevSystem();
     });
     this.screen.key(['right'], () => {
+      if (this._settingsOpen) return;
       this._navigateNextSystem();
     });
 
     this.screen.key(['r'], () => {
+      if (this._settingsOpen) return;
       this._showRecentRoms();
     });
 
     // Settings
     this.screen.key(['s'], () => {
+      if (this._settingsOpen) return;
       this._showSettings();
     });
 
     // Refresh
     this.screen.key(['f5'], () => {
+      if (this._settingsOpen) return;
       this._loadRoms();
     });
   }
@@ -399,14 +407,17 @@ export class Launcher {
     this.screen.destroy();
 
     const args = [rom.path];
-    const renderMode = this.prefs.get('renderMode');
-    if (renderMode === 'ascii') {
-      args.push('--ascii');
-    } else if (renderMode === 'braille') {
-      args.push('--braille');
-    } else if (renderMode === 'braille-dither') {
-      args.push('--braille-dither');
-    }
+
+    // Graphics options
+    const symbols = this.prefs.get('symbols');
+    const colors = this.prefs.get('colors');
+    const fgOnly = this.prefs.get('fgOnly');
+    const dither = this.prefs.get('dither');
+
+    args.push('--symbols', symbols);
+    args.push('--colors', colors);
+    if (fgOnly) args.push('--fg-only');
+    if (dither) args.push('--dither');
 
     // Convert 1-10 slider to contrast value (1=0.5, 5=1.0, 10=2.0)
     const contrastSlider = this.prefs.get('contrast') || 5;
@@ -429,17 +440,22 @@ export class Launcher {
 
   _showSettings() {
     this._settingsOpen = true;
-    const currentRenderMode = this.prefs.get('renderMode') || 'block';
 
-    const form = blessed.form({
+    // Load current settings
+    const currentSymbols = this.prefs.get('symbols');
+    const currentColors = this.prefs.get('colors');
+    const currentFgOnly = this.prefs.get('fgOnly');
+    const currentDither = this.prefs.get('dither');
+    const currentContrast = this.prefs.get('contrast');
+
+    const form = blessed.box({
       parent: this.screen,
       top: 'center',
       left: 'center',
-      width: '60%',
-      height: 20,
+      width: '70%',
+      height: 22,
       border: { type: 'line' },
       style: { border: { fg: 'yellow' } },
-      keys: true,
     });
 
     blessed.text({
@@ -450,6 +466,7 @@ export class Launcher {
       tags: true,
     });
 
+    // ROMs Directory
     blessed.text({
       parent: form,
       top: 2,
@@ -472,56 +489,116 @@ export class Launcher {
       value: this.prefs.get('romsDir'),
     });
 
-    blessed.text({
-      parent: form,
-      top: 7,
-      left: 2,
-      content: 'Render Mode:',
-    });
-
-    const RENDER_MODES = ['block', 'ascii', 'braille', 'braille-dither'];
-    const RENDER_MODE_LABELS = {
-      'block': 'Block characters',
-      'ascii': 'ASCII characters',
-      'braille': 'Braille (B&W)',
-      'braille-dither': 'Braille dithered',
+    // Symbols selection
+    const SYMBOLS = ['block', 'half', 'ascii', 'solid', 'stipple', 'quad', 'sextant', 'octant', 'braille'];
+    const SYMBOL_LABELS = {
+      'block': 'Block ▀▄█',
+      'half': 'Half ▀▄',
+      'ascii': 'ASCII @#%',
+      'solid': 'Solid (BG)',
+      'stipple': 'Stipple ░▒▓',
+      'quad': 'Quad 2x2',
+      'sextant': 'Sextant 2x3',
+      'octant': 'Octant 2x4',
+      'braille': 'Braille ⠿⡿',
     };
 
-    const renderModeBox = blessed.box({
+    blessed.text({ parent: form, top: 7, left: 2, content: 'Symbols:' });
+
+    let selectedSymbols = currentSymbols;
+    const symbolsBox = blessed.box({
       parent: form,
       top: 8,
       left: 2,
-      width: 30,
+      width: 20,
       height: 3,
       border: { type: 'line' },
-      style: {
-        border: { fg: 'blue' },
-        focus: { border: { fg: 'green' } },
-      },
+      style: { border: { fg: 'blue' } },
       tags: true,
-      content: ` ${RENDER_MODE_LABELS[currentRenderMode] || RENDER_MODE_LABELS['block']}`,
+      content: ` ${SYMBOL_LABELS[selectedSymbols] || 'Block ▀▄█'}`,
     });
 
-    let selectedRenderMode = currentRenderMode;
-
-    const toggleRenderMode = () => {
-      const idx = RENDER_MODES.indexOf(selectedRenderMode);
-      selectedRenderMode = RENDER_MODES[(idx + 1) % RENDER_MODES.length];
-      renderModeBox.setContent(` ${RENDER_MODE_LABELS[selectedRenderMode]}`);
+    const toggleSymbols = (delta = 1) => {
+      const idx = SYMBOLS.indexOf(selectedSymbols);
+      selectedSymbols = SYMBOLS[(idx + delta + SYMBOLS.length) % SYMBOLS.length];
+      symbolsBox.setContent(` ${SYMBOL_LABELS[selectedSymbols]}`);
       this.screen.render();
     };
 
-    renderModeBox.on('click', toggleRenderMode);
+    // Colors selection
+    const COLORS = ['true', '256', '16', '2'];
+    const COLOR_LABELS = {
+      'true': 'True Color',
+      '256': '256 Colors',
+      '16': '16 Colors',
+      '2': 'B&W',
+    };
 
-    // Contrast slider
-    blessed.text({
+    blessed.text({ parent: form, top: 7, left: 24, content: 'Colors:' });
+
+    let selectedColors = currentColors;
+    const colorsBox = blessed.box({
       parent: form,
-      top: 11,
-      left: 2,
-      content: 'Contrast:',
+      top: 8,
+      left: 24,
+      width: 16,
+      height: 3,
+      border: { type: 'line' },
+      style: { border: { fg: 'blue' } },
+      tags: true,
+      content: ` ${COLOR_LABELS[selectedColors] || 'True Color'}`,
     });
 
-    const currentContrast = this.prefs.get('contrast') || 5;
+    const toggleColors = (delta = 1) => {
+      const idx = COLORS.indexOf(selectedColors);
+      selectedColors = COLORS[(idx + delta + COLORS.length) % COLORS.length];
+      colorsBox.setContent(` ${COLOR_LABELS[selectedColors]}`);
+      this.screen.render();
+    };
+
+    // FG Only checkbox
+    let selectedFgOnly = currentFgOnly;
+    const fgOnlyBox = blessed.box({
+      parent: form,
+      top: 8,
+      left: 42,
+      width: 14,
+      height: 3,
+      border: { type: 'line' },
+      style: { border: { fg: 'blue' } },
+      tags: true,
+      content: selectedFgOnly ? ' [X] FG Only' : ' [ ] FG Only',
+    });
+
+    const toggleFgOnly = () => {
+      selectedFgOnly = !selectedFgOnly;
+      fgOnlyBox.setContent(selectedFgOnly ? ' [X] FG Only' : ' [ ] FG Only');
+      this.screen.render();
+    };
+
+    // Dither checkbox
+    let selectedDither = currentDither;
+    const ditherBox = blessed.box({
+      parent: form,
+      top: 8,
+      left: 58,
+      width: 13,
+      height: 3,
+      border: { type: 'line' },
+      style: { border: { fg: 'blue' } },
+      tags: true,
+      content: selectedDither ? ' [X] Dither' : ' [ ] Dither',
+    });
+
+    const toggleDither = () => {
+      selectedDither = !selectedDither;
+      ditherBox.setContent(selectedDither ? ' [X] Dither' : ' [ ] Dither');
+      this.screen.render();
+    };
+
+    // Contrast slider
+    blessed.text({ parent: form, top: 12, left: 2, content: 'Contrast:' });
+
     let selectedContrast = currentContrast;
 
     const renderSlider = (value) => {
@@ -532,15 +609,12 @@ export class Launcher {
 
     const contrastBox = blessed.box({
       parent: form,
-      top: 12,
+      top: 13,
       left: 2,
       width: 20,
       height: 3,
       border: { type: 'line' },
-      style: {
-        border: { fg: 'blue' },
-        focus: { border: { fg: 'green' } },
-      },
+      style: { border: { fg: 'blue' } },
       tags: true,
       content: renderSlider(selectedContrast),
     });
@@ -551,22 +625,31 @@ export class Launcher {
       this.screen.render();
     };
 
+    // Help text
     blessed.text({
       parent: form,
-      top: 15,
+      top: 17,
       left: 2,
-      content: '{white-fg}↑↓{/} field  {white-fg}←→{/} adjust  {white-fg}X{/} toggle  {white-fg}A{/} save  {white-fg}B{/} cancel',
+      content: '{white-fg}↑↓{/} field  {white-fg}←→{/} adjust/toggle  {white-fg}Space{/} toggle  {white-fg}Enter{/} save  {white-fg}Esc{/} cancel',
       tags: true,
     });
 
-    const FIELDS = ['roms', 'render', 'contrast'];
+    // Field navigation
+    const FIELDS = ['roms', 'symbols', 'colors', 'fgOnly', 'dither', 'contrast'];
     let focusedField = 'roms';
 
     const updateFieldStyles = () => {
       romsInput.style.border.fg = focusedField === 'roms' ? 'green' : 'blue';
-      renderModeBox.style.border.fg = focusedField === 'render' ? 'green' : 'blue';
+      symbolsBox.style.border.fg = focusedField === 'symbols' ? 'green' : 'blue';
+      colorsBox.style.border.fg = focusedField === 'colors' ? 'green' : 'blue';
+      fgOnlyBox.style.border.fg = focusedField === 'fgOnly' ? 'green' : 'blue';
+      ditherBox.style.border.fg = focusedField === 'dither' ? 'green' : 'blue';
       contrastBox.style.border.fg = focusedField === 'contrast' ? 'green' : 'blue';
-      if (focusedField === 'roms') romsInput.focus();
+      if (focusedField === 'roms') {
+        romsInput.focus();
+      } else {
+        romsInput.cancel();  // Stop textbox from capturing input
+      }
       this.screen.render();
     };
 
@@ -585,9 +668,28 @@ export class Launcher {
       focusField(FIELDS[(idx - 1 + FIELDS.length) % FIELDS.length]);
     };
 
+    const handleLeftRight = (delta) => {
+      if (focusedField === 'symbols') toggleSymbols(delta);
+      else if (focusedField === 'colors') toggleColors(delta);
+      else if (focusedField === 'fgOnly') toggleFgOnly();
+      else if (focusedField === 'dither') toggleDither();
+      else if (focusedField === 'contrast') adjustContrast(delta);
+    };
+
+    const handleToggle = () => {
+      if (focusedField === 'symbols') toggleSymbols(1);
+      else if (focusedField === 'colors') toggleColors(1);
+      else if (focusedField === 'fgOnly') toggleFgOnly();
+      else if (focusedField === 'dither') toggleDither();
+    };
+
     focusField('roms');
 
+    // Define handler first so closeForm/saveAndClose can remove it
+    let screenKeyHandler;
+
     const closeForm = () => {
+      this.screen.removeListener('keypress', screenKeyHandler);
       this._settingsOpen = false;
       this._settingsState = null;
       form.destroy();
@@ -596,11 +698,15 @@ export class Launcher {
     };
 
     const saveAndClose = () => {
+      this.screen.removeListener('keypress', screenKeyHandler);
       const newPath = romsInput.getValue().trim();
       if (newPath) {
         this.prefs.set('romsDir', newPath);
       }
-      this.prefs.set('renderMode', selectedRenderMode);
+      this.prefs.set('symbols', selectedSymbols);
+      this.prefs.set('colors', selectedColors);
+      this.prefs.set('fgOnly', selectedFgOnly);
+      this.prefs.set('dither', selectedDither);
       this.prefs.set('contrast', selectedContrast);
       this._settingsOpen = false;
       this._settingsState = null;
@@ -613,29 +719,32 @@ export class Launcher {
     this._settingsState = {
       focusNextField,
       focusPrevField,
-      toggleRenderMode,
-      adjustContrast,
+      handleLeftRight,
+      handleToggle,
       closeForm,
       saveAndClose,
       getFocusedField: () => focusedField,
     };
 
+    // Textbox needs its own handlers since inputOnFocus captures keys
     romsInput.key(['escape'], closeForm);
-    romsInput.key(['tab'], focusNextField);
+    romsInput.key(['tab', 'down'], focusNextField);
+    romsInput.key(['up'], focusPrevField);
     romsInput.key(['enter'], saveAndClose);
 
-    form.key(['escape'], closeForm);
-    form.key(['tab'], focusNextField);
-    form.key(['space'], () => {
-      if (focusedField === 'render') toggleRenderMode();
-    });
-    form.key(['left'], () => {
-      if (focusedField === 'contrast') adjustContrast(-1);
-    });
-    form.key(['right'], () => {
-      if (focusedField === 'contrast') adjustContrast(1);
-    });
-    form.key(['enter'], saveAndClose);
+    // Screen-level key handler for when textbox doesn't have focus
+    screenKeyHandler = (ch, key) => {
+      if (!this._settingsOpen) return;
+      if (focusedField === 'roms') return; // Let textbox handle its own keys
+      if (key.name === 'escape') closeForm();
+      else if (key.name === 'enter') saveAndClose();
+      else if (key.name === 'tab' || key.name === 'down') focusNextField();
+      else if (key.name === 'up') focusPrevField();
+      else if (key.name === 'space') handleToggle();
+      else if (key.name === 'left') handleLeftRight(-1);
+      else if (key.name === 'right') handleLeftRight(1);
+    };
+    this.screen.on('keypress', screenKeyHandler);
 
     this.screen.render();
   }
@@ -713,8 +822,15 @@ export class Launcher {
   }
 
   _updateControllerStatus(gamepads) {
+    const symbols = this.prefs.get('symbols');
+    const colors = this.prefs.get('colors');
+    const fgOnly = this.prefs.get('fgOnly');
+    const dither = this.prefs.get('dither');
+    const fgMode = fgOnly ? 'fg' : 'fg+bg';
+    const modeLine = `{cyan-fg}Mode:{/} ${symbols} ${colors} ${fgMode}${dither ? ' dither' : ''}`;
+
     if (gamepads.length === 0) {
-      this.controllerBox.setContent('{gray-fg}No controllers{/}\n{gray-fg}Keyboard: arrows + Enter{/}');
+      this.controllerBox.setContent(`{gray-fg}No controllers{/}\n{gray-fg}Keyboard: arrows + Enter{/}\n${modeLine}`);
     } else {
       const lines = gamepads.slice(0, 2).map((gp, i) => {
         const name = gp.id.length > 24 ? gp.id.substring(0, 24) + '...' : gp.id;
@@ -723,6 +839,7 @@ export class Launcher {
       if (gamepads.length > 2) {
         lines.push(`{gray-fg}+${gamepads.length - 2} more{/}`);
       }
+      lines.push(modeLine);
       this.controllerBox.setContent(lines.join('\n'));
     }
     this.screen.render();
@@ -771,21 +888,19 @@ export class Launcher {
         return;
       }
 
-      // D-pad left/right = adjust contrast (when on contrast field)
-      if (s.getFocusedField() === 'contrast') {
-        if (pressed(14)) {
-          s.adjustContrast(-1);
-          return;
-        }
-        if (pressed(15)) {
-          s.adjustContrast(1);
-          return;
-        }
+      // D-pad left/right = adjust current field
+      if (pressed(14)) {
+        s.handleLeftRight(-1);
+        return;
+      }
+      if (pressed(15)) {
+        s.handleLeftRight(1);
+        return;
       }
 
-      // X button = toggle render mode
+      // X button = toggle current field
       if (pressed(2)) {
-        s.toggleRenderMode();
+        s.handleToggle();
         return;
       }
 
@@ -854,10 +969,6 @@ export class Launcher {
       }
     }
 
-    // B button (east/button 1) = Back to system view
-    if (pressed(1)) {
-      this._showCurrentSystem();
-    }
 
     // X button (west/button 2) = Recent
     if (pressed(2)) {
