@@ -490,11 +490,12 @@ export class Launcher {
     });
 
     // Symbols selection
-    const SYMBOLS = ['block', 'half', 'ascii', 'solid', 'stipple', 'quad', 'sextant', 'octant', 'braille'];
+    const SYMBOLS = ['block', 'half', 'ascii', 'ascii+block', 'solid', 'stipple', 'quad', 'sextant', 'octant', 'braille'];
     const SYMBOL_LABELS = {
       'block': 'Block ▀▄█',
       'half': 'Half ▀▄',
       'ascii': 'ASCII @#%',
+      'ascii+block': 'ASCII+Block',
       'solid': 'Solid (BG)',
       'stipple': 'Stipple ░▒▓',
       'quad': 'Quad 2x2',

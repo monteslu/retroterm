@@ -11,7 +11,7 @@ const DEFAULTS = {
   recentGames: [],
   maxRecent: 10,
   // Graphics settings (3 independent options)
-  symbols: 'block',   // block, half, ascii, solid, stipple, quad, sextant, octant, braille
+  symbols: 'ascii+block',   // block, half, ascii, ascii+block, solid, stipple, quad, sextant, octant, braille
   colors: '256',      // true, 256, 16, 2
   fgOnly: true,       // foreground color only (black background)
   dither: false,      // Floyd-Steinberg dithering

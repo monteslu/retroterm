@@ -39,7 +39,7 @@
     "@monteslu/chafa-wasm": "^0.4.0",
     "gamepad-node": "^1.3.1",
     "hsync": "^0.33.0",
-    "retroemu": "^0.1.1",
+    "retroemu": "file:../retroemu",
     "sharp": "^0.34.5",
     "yauzl": "^3.2.0"
   }
