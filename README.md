@@ -1,12 +1,14 @@
 # retroterm
 
+[![NPM](https://img.shields.io/npm/v/retroterm.svg)](https://www.npmjs.com/package/retroterm)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Terminal-based retro game launcher. A blessed TUI frontend for [retroemu](https://github.com/monteslu/retroemu).
 
 - **ROM browser** — Scans your ROMs directory and organizes by system
 - **Recent games** — Quick access to recently played games
 - **Keyboard navigation** — vim-style controls
 - **Preferences** — Configurable ROMs and saves directories
-
 ```
 retroterm
 ```
