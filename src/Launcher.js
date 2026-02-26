@@ -413,11 +413,15 @@ export class Launcher {
     const colors = this.prefs.get('colors');
     const fgOnly = this.prefs.get('fgOnly');
     const dither = this.prefs.get('dither');
+    const videoMode = this.prefs.get('videoMode');
 
     args.push('--symbols', symbols);
     args.push('--colors', colors);
     if (fgOnly) args.push('--fg-only');
     if (dither) args.push('--dither');
+    if (videoMode && videoMode !== 'terminal') {
+      args.push('--video', videoMode);
+    }
 
     // Convert 1-10 slider to contrast value (1=0.5, 5=1.0, 10=2.0)
     const contrastSlider = this.prefs.get('contrast') || 5;
@@ -447,13 +451,14 @@ export class Launcher {
     const currentFgOnly = this.prefs.get('fgOnly');
     const currentDither = this.prefs.get('dither');
     const currentContrast = this.prefs.get('contrast');
+    const currentVideoMode = this.prefs.get('videoMode');
 
     const form = blessed.box({
       parent: this.screen,
       top: 'center',
       left: 'center',
       width: '70%',
-      height: 22,
+      height: 23,
       border: { type: 'line' },
       style: { border: { fg: 'yellow' } },
     });
@@ -490,17 +495,19 @@ export class Launcher {
     });
 
     // Symbols selection
-    const SYMBOLS = ['block', 'half', 'ascii', 'solid', 'stipple', 'quad', 'sextant', 'octant', 'braille'];
+    const SYMBOLS = ['block', 'half', 'ascii', 'ascii+block', 'solid', 'stipple', 'quad', 'sextant', 'octant', 'braille', 'matrix'];
     const SYMBOL_LABELS = {
       'block': 'Block ▀▄█',
       'half': 'Half ▀▄',
       'ascii': 'ASCII @#%',
+      'ascii+block': 'ASCII+Block',
       'solid': 'Solid (BG)',
       'stipple': 'Stipple ░▒▓',
       'quad': 'Quad 2x2',
       'sextant': 'Sextant 2x3',
       'octant': 'Octant 2x4',
       'braille': 'Braille ⠿⡿',
+      'matrix': 'Matrix ﾊﾐﾋ',
     };
 
     blessed.text({ parent: form, top: 7, left: 2, content: 'Symbols:' });
@@ -625,6 +632,36 @@ export class Launcher {
       this.screen.render();
     };
 
+    // Video Mode selection
+    const VIDEO_MODES = ['terminal', 'sdl', 'both'];
+    const VIDEO_LABELS = {
+      'terminal': 'Terminal',
+      'sdl': 'SDL Window',
+      'both': 'Both',
+    };
+
+    blessed.text({ parent: form, top: 12, left: 24, content: 'Video Output:' });
+
+    let selectedVideoMode = currentVideoMode;
+    const videoModeBox = blessed.box({
+      parent: form,
+      top: 13,
+      left: 24,
+      width: 16,
+      height: 3,
+      border: { type: 'line' },
+      style: { border: { fg: 'blue' } },
+      tags: true,
+      content: ` ${VIDEO_LABELS[selectedVideoMode] || 'Terminal'}`,
+    });
+
+    const toggleVideoMode = (delta = 1) => {
+      const idx = VIDEO_MODES.indexOf(selectedVideoMode);
+      selectedVideoMode = VIDEO_MODES[(idx + delta + VIDEO_MODES.length) % VIDEO_MODES.length];
+      videoModeBox.setContent(` ${VIDEO_LABELS[selectedVideoMode]}`);
+      this.screen.render();
+    };
+
     // Help text
     blessed.text({
       parent: form,
@@ -635,7 +672,7 @@ export class Launcher {
     });
 
     // Field navigation
-    const FIELDS = ['roms', 'symbols', 'colors', 'fgOnly', 'dither', 'contrast'];
+    const FIELDS = ['roms', 'symbols', 'colors', 'fgOnly', 'dither', 'contrast', 'videoMode'];
     let focusedField = 'roms';
 
     const updateFieldStyles = () => {
@@ -645,6 +682,7 @@ export class Launcher {
       fgOnlyBox.style.border.fg = focusedField === 'fgOnly' ? 'green' : 'blue';
       ditherBox.style.border.fg = focusedField === 'dither' ? 'green' : 'blue';
       contrastBox.style.border.fg = focusedField === 'contrast' ? 'green' : 'blue';
+      videoModeBox.style.border.fg = focusedField === 'videoMode' ? 'green' : 'blue';
       if (focusedField === 'roms') {
         romsInput.focus();
       } else {
@@ -674,6 +712,7 @@ export class Launcher {
       else if (focusedField === 'fgOnly') toggleFgOnly();
       else if (focusedField === 'dither') toggleDither();
       else if (focusedField === 'contrast') adjustContrast(delta);
+      else if (focusedField === 'videoMode') toggleVideoMode(delta);
     };
 
     const handleToggle = () => {
@@ -681,6 +720,7 @@ export class Launcher {
       else if (focusedField === 'colors') toggleColors(1);
       else if (focusedField === 'fgOnly') toggleFgOnly();
       else if (focusedField === 'dither') toggleDither();
+      else if (focusedField === 'videoMode') toggleVideoMode(1);
     };
 
     focusField('roms');
@@ -708,6 +748,7 @@ export class Launcher {
       this.prefs.set('fgOnly', selectedFgOnly);
       this.prefs.set('dither', selectedDither);
       this.prefs.set('contrast', selectedContrast);
+      this.prefs.set('videoMode', selectedVideoMode);
       this._settingsOpen = false;
       this._settingsState = null;
       form.destroy();
@@ -826,8 +867,10 @@ export class Launcher {
     const colors = this.prefs.get('colors');
     const fgOnly = this.prefs.get('fgOnly');
     const dither = this.prefs.get('dither');
+    const videoMode = this.prefs.get('videoMode');
     const fgMode = fgOnly ? 'fg' : 'fg+bg';
-    const modeLine = `{cyan-fg}Mode:{/} ${symbols} ${colors} ${fgMode}${dither ? ' dither' : ''}`;
+    const videoStr = videoMode !== 'terminal' ? ` {yellow-fg}${videoMode}{/}` : '';
+    const modeLine = `{cyan-fg}Mode:{/} ${symbols} ${colors} ${fgMode}${dither ? ' dither' : ''}${videoStr}`;
 
     if (gamepads.length === 0) {
       this.controllerBox.setContent(`{gray-fg}No controllers{/}\n{gray-fg}Keyboard: arrows + Enter{/}\n${modeLine}`);
