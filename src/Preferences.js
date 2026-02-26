@@ -16,6 +16,7 @@ const DEFAULTS = {
   fgOnly: true,       // foreground color only (black background)
   dither: false,      // Floyd-Steinberg dithering
   contrast: 5,        // 1-10, where 5 = 1.0 (normal)
+  videoMode: 'terminal',    // terminal, sdl, both
 };
 
 export class Preferences {
