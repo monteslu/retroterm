@@ -17,6 +17,7 @@ const DEFAULTS = {
   dither: false,      // Floyd-Steinberg dithering
   contrast: 5,        // 1-10, where 5 = 1.0 (normal)
   videoMode: 'terminal',    // terminal, sdl, both
+  fullscreen: false,        // start SDL window in fullscreen
 };
 
 export class Preferences {

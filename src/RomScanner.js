@@ -20,6 +20,9 @@ const ROM_EXTENSIONS = new Set([
   '.tzx', '.z80', '.sna',                     // ZX Spectrum
   '.mx1', '.mx2', '.rom', '.dsk', '.cas',     // MSX
   '.iso', '.pbp', '.m3u',                      // PlayStation
+  '.gtr',                                        // GameTank
+  '.wasc',                                       // WASM Cart Archive
+  '.jsgame', '.jsg',                             // JS Game
 ]);
 
 const SYSTEM_NAMES = {
@@ -40,6 +43,9 @@ const SYSTEM_NAMES = {
   '.tzx': 'ZX Spectrum', '.z80': 'ZX Spectrum', '.sna': 'ZX Spectrum',
   '.mx1': 'MSX', '.mx2': 'MSX', '.rom': 'MSX', '.dsk': 'MSX', '.cas': 'MSX',
   '.iso': 'PlayStation', '.pbp': 'PlayStation', '.m3u': 'PlayStation',
+  '.gtr': 'GameTank',
+  '.wasc': 'WASM Cart',
+  '.jsgame': 'JS Game', '.jsg': 'JS Game',
   '.zip': 'Archive',
 };
 

@@ -422,6 +422,7 @@ export class Launcher {
     if (videoMode && videoMode !== 'terminal') {
       args.push('--video', videoMode);
     }
+    if (this.prefs.get('fullscreen')) args.push('--fullscreen');
 
     // Convert 1-10 slider to contrast value (1=0.5, 5=1.0, 10=2.0)
     const contrastSlider = this.prefs.get('contrast') || 5;
@@ -662,6 +663,27 @@ export class Launcher {
       this.screen.render();
     };
 
+    // Fullscreen checkbox
+    const currentFullscreen = this.prefs.get('fullscreen');
+    let selectedFullscreen = currentFullscreen;
+    const fullscreenBox = blessed.box({
+      parent: form,
+      top: 13,
+      left: 42,
+      width: 18,
+      height: 3,
+      border: { type: 'line' },
+      style: { border: { fg: 'blue' } },
+      tags: true,
+      content: selectedFullscreen ? ' [X] Fullscreen' : ' [ ] Fullscreen',
+    });
+
+    const toggleFullscreen = () => {
+      selectedFullscreen = !selectedFullscreen;
+      fullscreenBox.setContent(selectedFullscreen ? ' [X] Fullscreen' : ' [ ] Fullscreen');
+      this.screen.render();
+    };
+
     // Help text
     blessed.text({
       parent: form,
@@ -672,7 +694,7 @@ export class Launcher {
     });
 
     // Field navigation
-    const FIELDS = ['roms', 'symbols', 'colors', 'fgOnly', 'dither', 'contrast', 'videoMode'];
+    const FIELDS = ['roms', 'symbols', 'colors', 'fgOnly', 'dither', 'contrast', 'videoMode', 'fullscreen'];
     let focusedField = 'roms';
 
     const updateFieldStyles = () => {
@@ -683,6 +705,7 @@ export class Launcher {
       ditherBox.style.border.fg = focusedField === 'dither' ? 'green' : 'blue';
       contrastBox.style.border.fg = focusedField === 'contrast' ? 'green' : 'blue';
       videoModeBox.style.border.fg = focusedField === 'videoMode' ? 'green' : 'blue';
+      fullscreenBox.style.border.fg = focusedField === 'fullscreen' ? 'green' : 'blue';
       if (focusedField === 'roms') {
         romsInput.focus();
       } else {
@@ -713,6 +736,7 @@ export class Launcher {
       else if (focusedField === 'dither') toggleDither();
       else if (focusedField === 'contrast') adjustContrast(delta);
       else if (focusedField === 'videoMode') toggleVideoMode(delta);
+      else if (focusedField === 'fullscreen') toggleFullscreen();
     };
 
     const handleToggle = () => {
@@ -721,6 +745,7 @@ export class Launcher {
       else if (focusedField === 'fgOnly') toggleFgOnly();
       else if (focusedField === 'dither') toggleDither();
       else if (focusedField === 'videoMode') toggleVideoMode(1);
+      else if (focusedField === 'fullscreen') toggleFullscreen();
     };
 
     focusField('roms');
@@ -749,6 +774,7 @@ export class Launcher {
       this.prefs.set('dither', selectedDither);
       this.prefs.set('contrast', selectedContrast);
       this.prefs.set('videoMode', selectedVideoMode);
+      this.prefs.set('fullscreen', selectedFullscreen);
       this._settingsOpen = false;
       this._settingsState = null;
       form.destroy();

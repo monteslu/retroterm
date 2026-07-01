@@ -111,7 +111,8 @@ retroterm supports all systems that retroemu supports:
 - **NEC** — TurboGrafx-16 / PC Engine
 - **SNK** — Neo Geo Pocket, Neo Geo Pocket Color
 - **Bandai** — WonderSwan, WonderSwan Color
-- **Other** — ColecoVision, Vectrex, ZX Spectrum, MSX
+- **Other consoles** — ColecoVision, Vectrex, ZX Spectrum, MSX, GameTank
+- **Native formats** — wasmcart (`.wasc`, WASM games from any language) and jsgame (`.jsgame`, JavaScript games)
 
 ## Streaming / Remote Play
 
