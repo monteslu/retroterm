@@ -112,6 +112,7 @@ retroterm supports all systems that retroemu supports:
 - **SNK** — Neo Geo Pocket, Neo Geo Pocket Color
 - **Bandai** — WonderSwan, WonderSwan Color
 - **Other consoles** — ColecoVision, Vectrex, ZX Spectrum, MSX, GameTank
+- **PICO-8** — `.p8` / `.p8.png` carts via FAKE-08 (MIT, no BIOS)
 - **Native formats** — wasmcart (`.wasc`, WASM games from any language) and jsgame (`.jsgame`, JavaScript games)
 
 ## Streaming / Remote Play
