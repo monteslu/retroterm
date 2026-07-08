@@ -1,6 +1,6 @@
 {
   "name": "retroterm",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Terminal-based retro game launcher with ROM browser and box art",
   "type": "module",
   "main": "index.js",
@@ -39,7 +39,7 @@
     "blessed": "^0.1.81",
     "gamepad-node": "^1.5.0",
     "hsync": "^0.33.0",
-    "retroemu": "^0.4.7",
+    "retroemu": "^0.4.8",
     "sharp": "^0.34.5",
     "yauzl": "^3.2.0"
   }
